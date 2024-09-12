@@ -24,7 +24,7 @@ type
     "1.0.1"
     ]
   }
-  TPackage = record
+  TWingetPackage = record
     InstalledVersion: string;
     Name: string;
     IsUpdateAvailable: boolean;
@@ -90,7 +90,8 @@ begin
       ZeroMemory(@ProcessInfo, SizeOf(TProcessInformation));
 
       // Command line
-      CommandLine := 'pwsh.exe -noprofile -Command ' + ACommand;
+      CommandLine := 'pwsh.exe -ExecutionPolicy Bypass -noprofile -Command '
+        + ACommand;
 
       // Create the PowerShell process
       if not CreateProcess(nil, PChar(CommandLine), nil, nil, True, 0, nil, nil,
@@ -132,25 +133,24 @@ end;
 procedure TForm1.Button1Click(Sender: TObject);
 var
   Output: string;
-  packages: tArray<TPackage>;
-  package: TPackage;
-  version : string;
+  packages: tArray<TWingetPackage>;
+  package: TWingetPackage;
+  version: string;
   serializer: TJsonSerializer;
 begin
   SynEdit1.lines.Clear;
   Output := RunPowerShellCommand
     ('Get-WinGetPackage -Source "winget" | ConvertTo-Json');
-  // SynEdit1.Text := Output;
   try
     serializer := TJsonSerializer.Create;
-    packages := serializer.Deserialize < tArray < TPackage >> (Output);
+    packages := serializer.Deserialize < tArray < TWingetPackage >> (Output);
     for package in packages do
     begin
       SynEdit1.lines.Add(package.Name);
       for version in package.AvailableVersions do
-        begin
-            Synedit1.Lines.add(format('  - %s',[version]));
-        end;
+      begin
+        SynEdit1.lines.Add(format('  - %s', [version]));
+      end;
     end;
   finally
     serializer.Free;
@@ -160,15 +160,13 @@ end;
 procedure TForm1.Button2Click(Sender: TObject);
 var
   Output: String;
-  table : tarray<string>;
+  table: tArray<string>;
 begin
   SynEdit1.lines.Clear;
   Output := RunPowerShellCommand
     ('@(Get-Module -listavailable -Name Microsoft.WinGet.Client).Length');
-//    ('Get-Module -ListAvailable -Name Microsoft.WinGet.Client | convertto-json -asArray -WarningAction SilentlyContinue');
+  SynEdit1.lines.Text := Output;
 
-  Synedit1.Lines.text := output;
-  
 end;
 
 end.

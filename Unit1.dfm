@@ -54,8 +54,6 @@ object Form1: TForm1
     Lines.Strings = (
       'SynEdit1')
     SelectedColor.Alpha = 0.400000005960464500
-    ExplicitWidth = 766
-    ExplicitHeight = 527
   end
   object Button1: TButton
     Left = 8
