@@ -1,0 +1,16 @@
+﻿[SynJSONSyn1]
+Coordinates=78,1,100,36
+
+[Button1]
+Coordinates=79,10,59,58
+
+[SynEdit1]
+Coordinates=148,10,66,36
+Visible=True
+
+[Button2]
+Coordinates=10,10,59,58
+
+[]
+Coordinates=326,1,103,36
+

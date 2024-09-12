@@ -3,22 +3,49 @@ unit Unit1;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, SynEditHighlighter, SynEditCodeFolding, SynHighlighterJSON, SynEdit;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics, System.JSON.Serializers,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, SynEditHighlighter,
+  SynEditCodeFolding, SynHighlighterJSON, SynEdit;
 
 type
+
+  {
+    "InstalledVersion": "1.1.12",
+    "Name": "NVM for Windows",
+    "Id": "CoreyButler.NVMforWindows",
+    "IsUpdateAvailable": false,
+    "Source": "winget",
+    "AvailableVersions": [
+    "1.1.12",
+    "1.1.11",
+    "1.1.10",
+    "1.1.9",
+    "1.0.1"
+    ]
+  }
+  TPackage = record
+    InstalledVersion: string;
+    Name: string;
+    IsUpdateAvailable: boolean;
+    Source: String;
+    AvailableVersions: tArray<String>;
+  end;
+
   TForm1 = class(TForm)
     SynEdit1: TSynEdit;
     SynJSONSyn1: TSynJSONSyn;
     Button1: TButton;
+    Button2: TButton;
     procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
   private
     { Private declarations }
   public
     { Public declarations }
   end;
 
-  function RunPowerShellCommand(const ACommand: string): string;
+function RunPowerShellCommand(const ACommand: string): string;
 
 var
   Form1: TForm1;
@@ -31,7 +58,7 @@ var
   ProcessInfo: TProcessInformation;
   SecurityAttributes: TSecurityAttributes;
   ReadPipe, WritePipe: THandle;
-  Buffer: array[0..1023] of Byte;
+  Buffer: array [0 .. 4095] of ansichar;
   BytesRead: DWORD;
   CommandLine: string;
   OutputStream: TMemoryStream;
@@ -66,7 +93,8 @@ begin
       CommandLine := 'pwsh.exe -noprofile -Command ' + ACommand;
 
       // Create the PowerShell process
-      if not CreateProcess(nil, PChar(CommandLine), nil, nil, True, 0, nil, nil, StartupInfo, ProcessInfo) then
+      if not CreateProcess(nil, PChar(CommandLine), nil, nil, True, 0, nil, nil,
+        StartupInfo, ProcessInfo) then
         RaiseLastOSError;
 
       // Close the write end of the pipe
@@ -104,10 +132,43 @@ end;
 procedure TForm1.Button1Click(Sender: TObject);
 var
   Output: string;
+  packages: tArray<TPackage>;
+  package: TPackage;
+  version : string;
+  serializer: TJsonSerializer;
 begin
-  Output := RunPowerShellCommand('Get-WinGetPackage -Source "winget" | ConvertTo-Json');
-//Output := RunPowerShellCommand('Get-Process');
-  SynEdit1.Text := Output;
+  SynEdit1.lines.Clear;
+  Output := RunPowerShellCommand
+    ('Get-WinGetPackage -Source "winget" | ConvertTo-Json');
+  // SynEdit1.Text := Output;
+  try
+    serializer := TJsonSerializer.Create;
+    packages := serializer.Deserialize < tArray < TPackage >> (Output);
+    for package in packages do
+    begin
+      SynEdit1.lines.Add(package.Name);
+      for version in package.AvailableVersions do
+        begin
+            Synedit1.Lines.add(format('  - %s',[version]));
+        end;
+    end;
+  finally
+    serializer.Free;
+  end;
+end;
+
+procedure TForm1.Button2Click(Sender: TObject);
+var
+  Output: String;
+  table : tarray<string>;
+begin
+  SynEdit1.lines.Clear;
+  Output := RunPowerShellCommand
+    ('@(Get-Module -listavailable -Name Microsoft.WinGet.Client).Length');
+//    ('Get-Module -ListAvailable -Name Microsoft.WinGet.Client | convertto-json -asArray -WarningAction SilentlyContinue');
+
+  Synedit1.Lines.text := output;
+  
 end;
 
 end.
